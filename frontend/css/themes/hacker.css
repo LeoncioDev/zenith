@@ -1,0 +1,173 @@
+/* ═══════════════════════════════════════════════════
+   hacker.css — Matrix Terminal
+   ═══════════════════════════════════════════════════ */
+
+[data-theme="hacker"] {
+  --bg: #000000;
+  --surface: #050505;
+  --surface-2: #0a0a0a;
+  --border: rgba(0, 255, 65, 0.18);
+  --accent: #00ff41;
+  --accent-muted: rgba(0, 255, 65, 0.08);
+  --up: #00ff41;
+  --down: #ff0033;
+  --text: #00ff41;
+  --text-muted: rgba(0, 255, 65, 0.5);
+  --text-dim: rgba(0, 255, 65, 0.15);
+
+  --font-display: 'Share Tech Mono', monospace;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-sans: 'Share Tech Mono', monospace;
+}
+
+/* Scanlines CRT */
+[data-theme="hacker"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.12) 2px,
+      rgba(0, 0, 0, 0.12) 4px);
+}
+
+/* Linha de scan animada */
+[data-theme="hacker"] body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to bottom,
+      transparent,
+      rgba(0, 255, 65, 0.12),
+      transparent);
+  z-index: 9998;
+  pointer-events: none;
+  animation: hackerScan 6s linear infinite;
+}
+
+@keyframes hackerScan {
+  0% {
+    transform: translateY(-4px);
+  }
+
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+/* Glow no texto principal */
+[data-theme="hacker"] .navbar__name,
+[data-theme="hacker"] .panel__title,
+[data-theme="hacker"] .panel__subtitle,
+[data-theme="hacker"] .coin-card__price,
+[data-theme="hacker"] .stat-item__value {
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.7);
+}
+
+/* Bordas com glow */
+[data-theme="hacker"] .panel,
+[data-theme="hacker"] .coin-card,
+[data-theme="hacker"] .stat-item {
+  box-shadow: 0 0 0 1px var(--border),
+    inset 0 0 20px rgba(0, 255, 65, 0.02);
+}
+
+[data-theme="hacker"] .coin-card:hover,
+[data-theme="hacker"] .panel:hover {
+  box-shadow: 0 0 0 1px var(--accent),
+    0 0 20px rgba(0, 255, 65, 0.08);
+}
+
+/* Cursor piscando nos preços */
+[data-theme="hacker"] .coin-card__price::after {
+  content: '▮';
+  font-size: 0.65em;
+  margin-left: 3px;
+  animation: hackerBlink 1s step-end infinite;
+  opacity: 0.8;
+}
+
+@keyframes hackerBlink {
+
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Glitch no hover do título */
+[data-theme="hacker"] .navbar__name {
+  position: relative;
+}
+
+[data-theme="hacker"] .navbar__name:hover::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  top: 0;
+  color: #ff0033;
+  opacity: 0.7;
+  animation: hackerGlitch 0.25s infinite;
+  clip-path: inset(40% 0 50% 0);
+}
+
+[data-theme="hacker"] .navbar__name:hover::after {
+  content: attr(data-text);
+  position: absolute;
+  left: -2px;
+  top: 0;
+  color: #00eeff;
+  opacity: 0.7;
+  animation: hackerGlitch 0.25s infinite reverse;
+  clip-path: inset(60% 0 20% 0);
+}
+
+@keyframes hackerGlitch {
+  0% {
+    transform: translate(0);
+  }
+
+  25% {
+    transform: translate(-2px, 1px);
+  }
+
+  50% {
+    transform: translate(2px, -1px);
+  }
+
+  75% {
+    transform: translate(-1px, 2px);
+  }
+
+  100% {
+    transform: translate(1px, -2px);
+  }
+}
+
+/* Prefix > na tabela */
+[data-theme="hacker"] .market-table tbody tr td:first-child::before {
+  content: '> ';
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Navbar */
+[data-theme="hacker"] .navbar {
+  border-bottom-color: rgba(0, 255, 65, 0.2);
+  box-shadow: 0 1px 0 rgba(0, 255, 65, 0.1);
+}
+
+/* Dropdown */
+[data-theme="hacker"] .theme-dropdown__menu {
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+}
