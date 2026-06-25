@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zenith</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@600;700&family=Share+Tech+Mono&family=Courier+Prime:wght@400;700&display=swap"
+    rel="stylesheet" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/static/css/base.css" />
+  <link rel="stylesheet" href="/static/css/themes/dark.css" />
+  <link rel="stylesheet" href="/static/css/themes/light.css" />
+  <link rel="stylesheet" href="/static/css/themes/blood.css" />
+  <link rel="stylesheet" href="/static/css/themes/hacker.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+  <link rel="stylesheet" href="/static/css/animations.css" />
+
+  <!-- Chart.js + plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2/dist/chartjs-chart-financial.js"></script>
+</head>
+
+<body>
+
+  <!-- ── NAVBAR ─────────────────────────────────────────────── -->
+  <nav class="navbar">
+    <div class="navbar__brand">
+      <span class="navbar__icon">◈</span>
+      <span class="navbar__name">Zenith</span>
+    </div>
+
+    <div class="navbar__right">
+      <!-- Seletor de Tema -->
+      <div class="theme-dropdown" id="themeDropdown">
+        <button class="theme-dropdown__btn" id="themeDropdownBtn">
+          <span class="theme-dropdown__dot" id="themeDropdownDot"></span>
+          <span class="theme-dropdown__label" id="themeDropdownLabel">Dark</span>
+          <span class="theme-dropdown__arrow">▾</span>
+        </button>
+        <div class="theme-dropdown__menu" id="themeDropdownMenu">
+          <button class="theme-option" data-theme="dark">
+            <span class="theme-option__dot" style="background:#4493f8"></span>
+            <span class="theme-option__name">Dark</span>
+            <span class="theme-option__desc">Padrão escuro</span>
+          </button>
+          <button class="theme-option" data-theme="light">
+            <span class="theme-option__dot" style="background:#1B3A6B"></span>
+            <span class="theme-option__name">Light</span>
+            <span class="theme-option__desc">Modo claro</span>
+          </button>
+          <button class="theme-option" data-theme="hacker">
+            <span class="theme-option__dot" style="background:#00ff41"></span>
+            <span class="theme-option__name">Hacker</span>
+            <span class="theme-option__desc">Terminal Matrix</span>
+          </button>
+          <button class="theme-option" data-theme="blood">
+            <span class="theme-option__dot" style="background:#ff0033"></span>
+            <span class="theme-option__name">Blood</span>
+            <span class="theme-option__desc">Los Santos</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status da conexão -->
+      <div class="connection-status" id="connectionStatus">
+        <span class="connection-status__dot"></span>
+        <span class="connection-status__label">Conectando...</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── TICKER ─────────────────────────────────────────────── -->
+  <div class="ticker-bar">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <!-- ── MAIN ───────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- ── MARKET STATS (topo) ────────────────────────────── -->
+    <section class="market-stats" id="marketStats">
+      <div class="stat-item">
+        <span class="stat-item__label">Market Cap Global</span>
+        <span class="stat-item__value" id="statMarketCap">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item__label">Volume 24h</span>
+        <span class="stat-item__value" id="statVolume">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item__label">Dominância BTC</span>
+        <span class="stat-item__value" id="statBtcDominance">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item__label">Fear & Greed</span>
+        <span class="stat-item__value" id="statFearGreed">—</span>
+      </div>
+    </section>
+
+    <!-- ── CARDS DE MOEDAS ────────────────────────────────── -->
+    <section class="coins-section">
+      <div class="coins-grid" id="coinsGrid">
+        <!-- Gerado via JS -->
+      </div>
+    </section>
+
+    <!-- ── DASHBOARD GRID ─────────────────────────────────── -->
+    <section class="dashboard-grid">
+
+      <!-- Gráfico principal (candlestick) -->
+      <div class="panel panel--chart">
+        <div class="panel__header">
+          <div class="panel__title-group">
+            <h2 class="panel__title" id="chartTitle">BTC / USDT</h2>
+            <span class="panel__subtitle" id="chartPrice">—</span>
+          </div>
+          <div class="chart-controls">
+            <select class="chart-coin-select" id="chartCoinSelect">
+              <option value="bitcoin">BTC</option>
+              <option value="ethereum">ETH</option>
+              <option value="binancecoin">BNB</option>
+              <option value="solana">SOL</option>
+              <option value="ripple">XRP</option>
+            </select>
+            <div class="timeframe-btns">
+              <button class="tf-btn active" data-days="1">1D</button>
+              <button class="tf-btn" data-days="7">7D</button>
+              <button class="tf-btn" data-days="30">1M</button>
+              <button class="tf-btn" data-days="90">3M</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel__body panel__body--chart">
+          <div class="chart-candlestick">
+            <canvas id="candlestickChart"></canvas>
+          </div>
+          <div class="chart-volume">
+            <canvas id="volumeChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel lateral direito -->
+      <div class="panel-sidebar">
+
+        <!-- Dominância -->
+        <div class="panel panel--donut">
+          <div class="panel__header">
+            <h2 class="panel__title">Dominância</h2>
+          </div>
+          <div class="panel__body panel__body--donut">
+            <canvas id="dominanceChart"></canvas>
+            <div class="donut-center" id="donutCenter">
+              <span class="donut-center__label">BTC</span>
+              <span class="donut-center__value" id="donutBtcValue">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fear & Greed -->
+        <div class="panel panel--fear">
+          <div class="panel__header">
+            <h2 class="panel__title">Fear & Greed Index</h2>
+          </div>
+          <div class="panel__body panel__body--fear">
+            <div class="fear-gauge" id="fearGauge">
+              <div class="fear-gauge__bar">
+                <div class="fear-gauge__fill" id="fearFill"></div>
+              </div>
+              <div class="fear-gauge__labels">
+                <span>Medo Extremo</span>
+                <span>Ganância Extrema</span>
+              </div>
+            </div>
+            <div class="fear-value">
+              <span class="fear-value__number" id="fearValue">—</span>
+              <span class="fear-value__label" id="fearLabel">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversor rápido -->
+        <div class="panel panel--converter">
+          <div class="panel__header">
+            <h2 class="panel__title">Conversor</h2>
+          </div>
+          <div class="panel__body panel__body--converter">
+            <div class="converter-row">
+              <input class="converter-input" id="converterInput" type="number" placeholder="0.00" min="0" step="any" />
+              <select class="converter-select" id="converterFrom">
+                <option value="usd">USD $</option>
+                <option value="btc">BTC</option>
+                <option value="eth">ETH</option>
+                <option value="bnb">BNB</option>
+                <option value="sol">SOL</option>
+                <option value="xrp">XRP</option>
+              </select>
+            </div>
+            <div class="converter-arrow">⇅</div>
+            <div class="converter-row">
+              <span class="converter-result" id="converterResult">—</span>
+              <select class="converter-select" id="converterTo">
+                <option value="btc">BTC</option>
+                <option value="usd">USD $</option>
+                <option value="eth">ETH</option>
+                <option value="bnb">BNB</option>
+                <option value="sol">SOL</option>
+                <option value="xrp">XRP</option>
+              </select>
+            </div>
+            <p class="converter-rate" id="converterRate">—</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── TABELA ──────────────────────────────────────────── -->
+    <section class="panel panel--table">
+      <div class="panel__header">
+        <h2 class="panel__title">Mercado</h2>
+        <input class="table-search" id="tableSearch" type="text" placeholder="Buscar moeda..." />
+      </div>
+      <div class="panel__body panel__body--table">
+        <table class="market-table" id="marketTable">
+          <thead>
+            <tr>
+              <th data-sort="rank">#</th>
+              <th data-sort="name">Moeda</th>
+              <th data-sort="price">Preço</th>
+              <th data-sort="change1h">1h %</th>
+              <th data-sort="change24h">24h %</th>
+              <th data-sort="change7d">7d %</th>
+              <th data-sort="volume">Volume 24h</th>
+              <th data-sort="marketcap">Market Cap</th>
+            </tr>
+          </thead>
+          <tbody id="marketTableBody">
+            <!-- Gerado via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── SCRIPTS ────────────────────────────────────────────── -->
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/themes.js"></script>
+  <script src="/static/js/websocket.js"></script>
+  <script src="/static/js/ticker.js"></script>
+  <script src="/static/js/converter.js"></script>
+  <script src="/static/js/charts.js"></script>
+  <script src="/static/js/market.js"></script>
+  <script src="/static/js/app.js"></script>
+
+</body>
+
+</html>

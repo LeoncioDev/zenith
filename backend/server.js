@@ -18,20 +18,21 @@
  *   GET  /api/status        → health check do servidor
  *   WS   /ws/prices         → stream de preços ao vivo (Binance relay)
  */
-
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { fileURLToPath } from 'url';
 import { join, dirname } from 'path';
 import cors from 'cors';
-
 import { relay } from './ws-relay.js';
 import * as coingecko from './coingecko.js';
 
 // Em módulos ES, __dirname não existe — reconstruímos manualmente
 const __dirname    = dirname(fileURLToPath(import.meta.url));
-const FRONTEND_DIR = join(__dirname, '..', 'frontend');
+
+// Caminho absoluto para a pasta do frontend (dentro do próprio backend no deploy)
+const FRONTEND_DIR = join(__dirname, 'frontend');
+
 const PORT         = process.env.PORT || 8000;
 
 // ── App Express ──────────────────────────────────────────────────────────────
@@ -149,12 +150,11 @@ app.get('/api/status', (req, res) => {
 });
 
 // ── Servidor HTTP + WebSocket ────────────────────────────────────────────────
-
 // O servidor HTTP e o WebSocket compartilham a mesma porta
 // O Express lida com requisições HTTP normais
 // O WebSocketServer intercepta conexões no path /ws/prices
-const server = createServer(app);
 
+const server = createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws/prices' });
 
 wss.on('connection', (ws) => {
