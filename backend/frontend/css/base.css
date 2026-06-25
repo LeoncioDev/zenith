@@ -343,9 +343,6 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
   cursor: grab;
-  /* Scroll suave no touch */
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x proximity;
 }
 
 .coins-grid::-webkit-scrollbar {
@@ -381,7 +378,6 @@ body {
   transition: border-color 0.2s, transform 0.15s, background 0.2s;
   position: relative;
   overflow: hidden;
-  scroll-snap-align: start;
 }
 
 .coin-card:hover {
@@ -738,8 +734,6 @@ body {
 .panel__body--table {
   padding: 0;
   overflow-x: auto;
-  /* Scroll suave no touch */
-  -webkit-overflow-scrolling: touch;
   /* Scrollbar visível mas fina na tabela */
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
@@ -903,16 +897,10 @@ body {
 @media (max-width: 768px) {
   .navbar {
     padding: 0 16px;
-    height: 52px;
   }
 
   .navbar__name {
     font-size: 15px;
-  }
-
-  /* Esconde o label do status de conexão no mobile — só o dot fica visível */
-  .connection-status__label {
-    display: none;
   }
 
   .main {
@@ -940,34 +928,9 @@ body {
   .chart-controls {
     gap: 6px;
   }
-
-  /* Tabela mobile: esconde colunas menos importantes (1h%, 7d%, Market Cap)
-     para caber na tela sem precisar rolar tanto horizontalmente.
-     O usuário ainda pode rolar para ver tudo, mas as colunas essenciais
-     (rank, moeda, preço, 24h%, volume) aparecem sem scroll. */
-  .market-table th:nth-child(4),
-  /* 1h% */
-  .market-table td:nth-child(4),
-  .market-table th:nth-child(6),
-  /* 7d% */
-  .market-table td:nth-child(6),
-  .market-table th:nth-child(8),
-  /* Market Cap */
-  .market-table td:nth-child(8) {
-    display: none;
-  }
-
-  /* Reduz padding das células na tabela mobile para mais espaço */
-  .market-table th,
-  .market-table td {
-    padding: 10px 10px;
-    font-size: 12px;
-  }
 }
 
 @media (max-width: 640px) {
-
-  /* Sidebar vira coluna no mobile pequeno */
   .panel-sidebar {
     flex-direction: column;
   }
@@ -984,11 +947,6 @@ body {
   .panel__header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  /* Coin cards menores em mobile pequeno para caber mais */
-  .coin-card {
-    flex: 0 0 150px;
   }
 }
 
@@ -1019,5 +977,112 @@ body {
 
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* ── Accordion mobile — tabela expansível ─────────────────────────────────────
+   No mobile (≤768px) a tabela mostra só rank + moeda + chevron.
+   Ao clicar, um <tr class="expand-row"> é inserido abaixo com os detalhes.
+   O desktop não é afetado — estes estilos só existem dentro do @media. */
+@media (max-width: 768px) {
+
+  /* Esconde as colunas da tabela que não existem no modo mobile */
+  .market-table thead {
+    display: none;
+  }
+
+  /* Linha mobile compacta */
+  .mobile-row {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .mobile-row:hover,
+  .mobile-row.row-expanded {
+    background: var(--surface-2);
+  }
+
+  /* Célula do chevron — alinhada à direita */
+  .td-chevron-cell {
+    text-align: right;
+    width: 32px;
+    padding-right: 16px !important;
+  }
+
+  .td-chevron {
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: color 0.15s;
+    user-select: none;
+  }
+
+  .mobile-row.row-expanded .td-chevron {
+    color: var(--accent);
+  }
+
+  /* Linha de detalhes expandida — aparece abaixo da linha clicada */
+  .expand-row {
+    background: var(--bg);
+  }
+
+  .expand-row td {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Grid de detalhes em duas colunas: label à esquerda, valor à direita */
+  .expand-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    animation: expandIn 0.18s ease;
+  }
+
+  .expand-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 16px;
+    background: var(--surface);
+  }
+
+  .expand-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+
+  .expand-value {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text);
+  }
+
+  /* Animação suave de abertura */
+  @keyframes expandIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Navbar: esconde label do status de conexão — só o dot fica visível */
+  .connection-status__label {
+    display: none;
+  }
+
+  /* Tabela mobile: remove overflow-x — o accordion elimina a necessidade de scroll horizontal */
+  .panel__body--table {
+    overflow-x: hidden;
   }
 }

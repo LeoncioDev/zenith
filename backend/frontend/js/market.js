@@ -18,6 +18,13 @@ const Market = (() => {
 
   // ── Formatadores (fmtPrice, fmtLarge, fmtPct, fmtVolume em utils.js) ──
 
+  // ── Detecção de mobile ────────────────────────────────────
+  // Usada para alternar entre tabela normal (desktop) e accordion (mobile).
+  // O breakpoint 768px é o mesmo usado no CSS.
+  function isMobile() {
+    return window.innerWidth <= 768;
+  }
+
   // ── Skeletons ─────────────────────────────────────────────
 
   function renderSkeletonCards() {
@@ -38,26 +45,47 @@ const Market = (() => {
   function renderSkeletonTable() {
     const tbody = document.getElementById('marketTableBody');
     if (!tbody) return;
-    tbody.innerHTML = Array(10).fill(0).map((_, i) => `
-      <tr class="table-skeleton">
-        <td><span class="skel" style="width:20px"></span></td>
-        <td>
-          <div class="table-coin">
-            <div style="width:24px;height:24px;border-radius:50%;background:var(--surface-2)"></div>
-            <div>
-              <div class="skel" style="width:${60 + (i % 3) * 20}px;margin-bottom:4px"></div>
-              <div class="skel" style="width:30px;height:10px"></div>
+
+    if (isMobile()) {
+      // Skeleton mobile — só rank + moeda
+      tbody.innerHTML = Array(10).fill(0).map((_, i) => `
+        <tr class="table-skeleton">
+          <td><span class="skel" style="width:20px"></span></td>
+          <td>
+            <div class="table-coin">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--surface-2)"></div>
+              <div>
+                <div class="skel" style="width:${60 + (i % 3) * 20}px;margin-bottom:4px"></div>
+                <div class="skel" style="width:30px;height:10px"></div>
+              </div>
             </div>
-          </div>
-        </td>
-        <td><span class="skel" style="width:80px"></span></td>
-        <td><span class="skel" style="width:50px"></span></td>
-        <td><span class="skel" style="width:50px"></span></td>
-        <td><span class="skel" style="width:50px"></span></td>
-        <td><span class="skel" style="width:70px"></span></td>
-        <td><span class="skel" style="width:80px"></span></td>
-      </tr>
-    `).join('');
+          </td>
+          <td><span class="td-chevron">▾</span></td>
+        </tr>
+      `).join('');
+    } else {
+      // Skeleton desktop — todas as colunas
+      tbody.innerHTML = Array(10).fill(0).map((_, i) => `
+        <tr class="table-skeleton">
+          <td><span class="skel" style="width:20px"></span></td>
+          <td>
+            <div class="table-coin">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--surface-2)"></div>
+              <div>
+                <div class="skel" style="width:${60 + (i % 3) * 20}px;margin-bottom:4px"></div>
+                <div class="skel" style="width:30px;height:10px"></div>
+              </div>
+            </div>
+          </td>
+          <td><span class="skel" style="width:80px"></span></td>
+          <td><span class="skel" style="width:50px"></span></td>
+          <td><span class="skel" style="width:50px"></span></td>
+          <td><span class="skel" style="width:50px"></span></td>
+          <td><span class="skel" style="width:70px"></span></td>
+          <td><span class="skel" style="width:80px"></span></td>
+        </tr>
+      `).join('');
+    }
   }
 
   // ── Drag to scroll ────────────────────────────────────────
@@ -151,7 +179,73 @@ const Market = (() => {
     });
   }
 
+  // ── Accordion mobile: toggle expand de uma linha ──────────
+  // Ao clicar numa linha no mobile, insere ou remove o <tr> de detalhes
+  // logo abaixo dela. O <tr> expandido tem classe .expand-row e mostra
+  // preço, 24h% e volume em layout key-value.
+  function toggleExpandRow(row, coin) {
+    const sym = coin.symbol.toUpperCase();
+    const cached = liveCacheUSD[sym];
+    const price = cached?.usdPrice ?? coin.current_price;
+    const ch24h = cached?.change_pct ?? coin.price_change_percentage_24h;
+    const isUp24h = ch24h >= 0;
+
+    // Verifica se já existe uma linha expandida logo abaixo
+    const next = row.nextElementSibling;
+    if (next && next.classList.contains('expand-row')) {
+      // Já está expandida — fecha
+      next.remove();
+      row.classList.remove('row-expanded');
+      const chevron = row.querySelector('.td-chevron');
+      if (chevron) chevron.textContent = '▾';
+      return;
+    }
+
+    // Fecha qualquer outra linha expandida antes de abrir esta
+    document.querySelectorAll('.expand-row').forEach(r => r.remove());
+    document.querySelectorAll('.row-expanded').forEach(r => {
+      r.classList.remove('row-expanded');
+      const ch = r.querySelector('.td-chevron');
+      if (ch) ch.textContent = '▾';
+    });
+
+    // Abre esta linha
+    row.classList.add('row-expanded');
+    const chevron = row.querySelector('.td-chevron');
+    if (chevron) chevron.textContent = '▴';
+
+    // Cria o <tr> de detalhes com key-value layout
+    const expandTr = document.createElement('tr');
+    expandTr.className = 'expand-row';
+    expandTr.innerHTML = `
+      <td colspan="3">
+        <div class="expand-content">
+          <div class="expand-item">
+            <span class="expand-label">Preço</span>
+            <span class="expand-value td-price" id="tprice-${sym}">${fmtPrice(price)}</span>
+          </div>
+          <div class="expand-item">
+            <span class="expand-label">24h %</span>
+            <span class="expand-value td-change td-change--${isUp24h ? 'up' : 'down'}" id="tchange-${sym}">${fmtPct(ch24h)}</span>
+          </div>
+          <div class="expand-item">
+            <span class="expand-label">Volume 24h</span>
+            <span class="expand-value td-volume">${fmtLarge(coin.total_volume)}</span>
+          </div>
+          <div class="expand-item">
+            <span class="expand-label">Market Cap</span>
+            <span class="expand-value td-marketcap">${fmtLarge(coin.market_cap)}</span>
+          </div>
+        </div>
+      </td>
+    `;
+
+    row.after(expandTr);
+  }
+
   // ── Render Table ──────────────────────────────────────────
+  // Desktop: tabela normal com todas as colunas.
+  // Mobile: tabela compacta (rank + moeda + chevron) com accordion ao clicar.
 
   function renderTable() {
     const tbody = document.getElementById('marketTableBody');
@@ -190,39 +284,75 @@ const Market = (() => {
       return;
     }
 
-    tbody.innerHTML = data.map(coin => {
-      const sym = coin.symbol.toUpperCase();
-      const cached = liveCacheUSD[sym];
-      const price = cached?.usdPrice ?? coin.current_price;
-      const ch1h = coin.price_change_percentage_1h_in_currency;
-      const ch24h = cached?.change_pct ?? coin.price_change_percentage_24h;
-      const ch7d = coin.price_change_percentage_7d_in_currency;
-
-      return `
-        <tr data-id="${coin.id}" data-symbol="${sym}">
-          <td style="color:var(--text-muted)">${coin.market_cap_rank}</td>
-          <td>
-            <div class="table-coin">
-              <img class="table-coin__img" src="${coin.image}" alt="${coin.name}" loading="lazy" />
-              <div>
-                <div class="table-coin__name">${coin.name}</div>
-                <div class="table-coin__symbol">${sym}</div>
+    if (isMobile()) {
+      // ── Modo mobile: accordion ────────────────────────────
+      // Renderiza só rank + moeda + chevron. Detalhes aparecem ao clicar.
+      tbody.innerHTML = data.map(coin => {
+        const sym = coin.symbol.toUpperCase();
+        return `
+          <tr data-id="${coin.id}" data-symbol="${sym}" class="mobile-row">
+            <td style="color:var(--text-muted);width:32px">${coin.market_cap_rank}</td>
+            <td>
+              <div class="table-coin">
+                <img class="table-coin__img" src="${coin.image}" alt="${coin.name}" loading="lazy" />
+                <div>
+                  <div class="table-coin__name">${coin.name}</div>
+                  <div class="table-coin__symbol">${sym}</div>
+                </div>
               </div>
-            </div>
-          </td>
-          <td class="td-price" id="tprice-${sym}">${fmtPrice(price)}</td>
-          <td class="td-change td-change--${ch1h >= 0 ? 'up' : 'down'}">${fmtPct(ch1h)}</td>
-          <td class="td-change td-change--${ch24h >= 0 ? 'up' : 'down'}" id="tchange-${sym}">${fmtPct(ch24h)}</td>
-          <td class="td-change td-change--${ch7d >= 0 ? 'up' : 'down'}">${fmtPct(ch7d)}</td>
-          <td class="td-volume">${fmtLarge(coin.total_volume)}</td>
-          <td class="td-marketcap">${fmtLarge(coin.market_cap)}</td>
-        </tr>
-      `;
-    }).join('');
+            </td>
+            <td class="td-chevron-cell"><span class="td-chevron">▾</span></td>
+          </tr>
+        `;
+      }).join('');
 
-    tbody.querySelectorAll('tr[data-id]').forEach(row => {
-      row.addEventListener('click', () => selectCoin(row.dataset.id, row.dataset.symbol));
-    });
+      // Adiciona o evento de accordion em cada linha
+      tbody.querySelectorAll('tr.mobile-row').forEach(row => {
+        const coin = data.find(c => c.id === row.dataset.id);
+        if (!coin) return;
+        row.addEventListener('click', () => {
+          // Clique também seleciona a moeda no gráfico
+          selectCoin(coin.id, coin.symbol.toUpperCase());
+          toggleExpandRow(row, coin);
+        });
+      });
+
+    } else {
+      // ── Modo desktop: tabela completa ─────────────────────
+      tbody.innerHTML = data.map(coin => {
+        const sym = coin.symbol.toUpperCase();
+        const cached = liveCacheUSD[sym];
+        const price = cached?.usdPrice ?? coin.current_price;
+        const ch1h = coin.price_change_percentage_1h_in_currency;
+        const ch24h = cached?.change_pct ?? coin.price_change_percentage_24h;
+        const ch7d = coin.price_change_percentage_7d_in_currency;
+
+        return `
+          <tr data-id="${coin.id}" data-symbol="${sym}">
+            <td style="color:var(--text-muted)">${coin.market_cap_rank}</td>
+            <td>
+              <div class="table-coin">
+                <img class="table-coin__img" src="${coin.image}" alt="${coin.name}" loading="lazy" />
+                <div>
+                  <div class="table-coin__name">${coin.name}</div>
+                  <div class="table-coin__symbol">${sym}</div>
+                </div>
+              </div>
+            </td>
+            <td class="td-price" id="tprice-${sym}">${fmtPrice(price)}</td>
+            <td class="td-change td-change--${ch1h >= 0 ? 'up' : 'down'}">${fmtPct(ch1h)}</td>
+            <td class="td-change td-change--${ch24h >= 0 ? 'up' : 'down'}" id="tchange-${sym}">${fmtPct(ch24h)}</td>
+            <td class="td-change td-change--${ch7d >= 0 ? 'up' : 'down'}">${fmtPct(ch7d)}</td>
+            <td class="td-volume">${fmtLarge(coin.total_volume)}</td>
+            <td class="td-marketcap">${fmtLarge(coin.market_cap)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('tr[data-id]').forEach(row => {
+        row.addEventListener('click', () => selectCoin(row.dataset.id, row.dataset.symbol));
+      });
+    }
   }
 
   // ── Toast ─────────────────────────────────────────────────
@@ -323,12 +453,14 @@ const Market = (() => {
   }
 
   // ── Update preço via WebSocket ────────────────────────────
+  // Atualiza cards, tabela desktop e linhas expandidas no mobile.
 
   function updatePrice(ticker) {
     const { symbol, price, change_pct } = ticker;
 
     liveCacheUSD[symbol] = { usdPrice: price, change_pct };
 
+    // ── Atualiza card de moeda ────────────────────────────
     const priceEl = document.getElementById(`price-${symbol}`);
     if (priceEl) {
       const prev = parseFloat(priceEl.dataset.usdPrice || '0');
@@ -345,6 +477,9 @@ const Market = (() => {
       changeEl.className = `coin-card__change coin-card__change--${change_pct >= 0 ? 'up' : 'down'}`;
     }
 
+    // ── Atualiza tabela (desktop ou linha expandida mobile) ──
+    // Os IDs tprice-SYM e tchange-SYM existem tanto na tabela desktop
+    // quanto dentro do .expand-row do accordion mobile quando aberto.
     const tPriceEl = document.getElementById(`tprice-${symbol}`);
     if (tPriceEl) tPriceEl.textContent = fmtPrice(price);
 
@@ -354,6 +489,7 @@ const Market = (() => {
       tChangeEl.className = `td-change td-change--${change_pct >= 0 ? 'up' : 'down'}`;
     }
 
+    // ── Atualiza preço no gráfico se for a moeda selecionada ──
     const coinId = SYMBOL_TO_ID[symbol];
     if (coinId === currentCoin) {
       const chartPrice = document.getElementById('chartPrice');
@@ -377,6 +513,12 @@ const Market = (() => {
     setInterval(loadMarkets, 60_000);
     setInterval(loadGlobal, 60_000);
     setInterval(loadFearGreed, 3_600_000);
+
+    // Re-renderiza tabela ao redimensionar — garante que ao girar o celular
+    // ou redimensionar a janela o modo correto (desktop/mobile) seja aplicado.
+    window.addEventListener('resize', () => {
+      if (marketsData.length) renderTable();
+    });
 
     const coinSelect = document.getElementById('chartCoinSelect');
     coinSelect?.addEventListener('change', e => {
