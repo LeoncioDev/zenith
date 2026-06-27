@@ -175,6 +175,8 @@
   height: 32px;
   display: flex;
   align-items: center;
+  pointer-events: none;
+  /* ignora mouse — animação nunca para */
 }
 
 .ticker-track {
@@ -185,9 +187,7 @@
   will-change: transform;
 }
 
-.ticker-bar:hover .ticker-track {
-  animation-play-state: paused;
-}
+/* ticker sempre em movimento — ignora hover */
 
 .ticker-item {
   display: inline-flex;

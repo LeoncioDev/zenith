@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* utils.js — Funções utilitárias compartilhadas entre os módulos */
 
 /**

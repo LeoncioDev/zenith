@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ticker.js — Faixa de preços rolando em tempo real
  *

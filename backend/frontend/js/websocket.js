@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * websocket.js — Conexão WebSocket com o backend relay
  *

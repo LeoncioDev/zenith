@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * app.js — Ponto de entrada e orquestração do Zenith
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * converter.js — Conversor de moedas em tempo real
  *

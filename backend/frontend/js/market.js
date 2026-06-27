@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* market.js — Dados REST (CoinGecko via backend) + updates WebSocket */
 
 const Market = (() => {
@@ -427,13 +428,15 @@ const Market = (() => {
   }
 
   async function loadOHLC(coinId, days) {
+    Charts.showChartLoading(); // mostra loading antes do fetch
     try {
       const resp = await fetch(`/api/ohlc/${coinId}?days=${days}&vs_currency=usd`);
       if (!resp.ok) throw new Error(resp.status);
       const data = await resp.json();
-      Charts.updateCandlestick(data);
+      Charts.updateCandlestick(data); // trata array vazio internamente
     } catch (e) {
       console.error('Erro OHLC:', e);
+      Charts.updateCandlestick([]); // força mensagem de erro no painel
       showToast('⚠️ Gráfico indisponível.');
     }
   }

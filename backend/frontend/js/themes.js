@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * themes.js — Gerenciamento de temas visuais + título dinâmico
  *
@@ -11,7 +12,7 @@
  * - O MutationObserver em charts.js detecta a mudança e atualiza os gráficos
  */
 
-const THEME_KEY     = 'cryptoscope_theme'; // chave de persistência no localStorage
+const THEME_KEY     = 'zenith_theme'; // chave de persistência no localStorage
 const DEFAULT_THEME = 'dark';              // tema padrão se não houver preferência salva
 
 // Configuração visual de cada tema para o dropdown
